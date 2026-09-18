@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import os
 from pathlib import Path
 
 from sqlalchemy import create_engine, select
@@ -10,7 +11,11 @@ from sqlalchemy.orm import Session, sessionmaker
 from models import Base, Job, JobStatus
 from scrapers.base import JobOffer
 
-DB_PATH = Path(__file__).resolve().parents[1] / "data" / "jobs.db"
+DATA_DIR = Path(os.getenv(
+    "JOBAPPLY_DATA_DIR",
+    Path(__file__).resolve().parents[1] / "data",
+)).resolve()
+DB_PATH = DATA_DIR / "jobs.db"
 
 engine = create_engine(f"sqlite:///{DB_PATH}", echo=False, future=True)
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)

@@ -1,0 +1,16 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      CORS_ORIGINS: "http://localhost:5173,http://127.0.0.1:5173,https://scrapping-version1.vercel.app"
+      SCRAPER_HEADLESS: "true"
+      JOBAPPLY_DATA_DIR: /app/data
+    volumes:
+      - jobapply_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  jobapply_data:
+

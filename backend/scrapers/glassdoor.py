@@ -14,6 +14,7 @@ côté matching fait le tri par ville ensuite.
 from __future__ import annotations
 
 import asyncio
+import os
 import random
 import re
 from pathlib import Path
@@ -24,7 +25,11 @@ from playwright.async_api import async_playwright, Page
 from .base import BaseScraper, JobOffer
 
 BASE_URL = "https://www.glassdoor.fr"
-USER_DATA_DIR = Path(__file__).resolve().parents[2] / "data" / "browser_glassdoor"
+DATA_DIR = Path(os.getenv(
+    "JOBAPPLY_DATA_DIR",
+    Path(__file__).resolve().parents[2] / "data",
+)).resolve()
+USER_DATA_DIR = DATA_DIR / "browser_glassdoor"
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"

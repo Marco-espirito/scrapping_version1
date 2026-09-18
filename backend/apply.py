@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import sys
 import unicodedata
 from datetime import datetime, timezone
@@ -31,7 +32,11 @@ from db import init_db, get_session
 from models import Job, JobStatus
 from scrapers.indeed import USER_DATA_DIR, USER_AGENT, BASE_URL
 
-CANDIDAT_PATH = Path(__file__).resolve().parents[1] / "data" / "candidat.json"
+DATA_DIR = Path(os.getenv(
+    "JOBAPPLY_DATA_DIR",
+    Path(__file__).resolve().parents[1] / "data",
+)).resolve()
+CANDIDAT_PATH = DATA_DIR / "candidat.json"
 
 
 def _norm(s: str) -> str:

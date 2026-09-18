@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -25,8 +26,9 @@ from matching import load_profil, score_offer
 from scrapers import IndeedScraper, GlassdoorScraper
 
 ROOT = Path(__file__).resolve().parents[1]
-CONF = ROOT / "data" / "recherches.json"
-LOG = ROOT / "data" / "collecte.log"
+DATA_DIR = Path(os.getenv("JOBAPPLY_DATA_DIR", ROOT / "data")).resolve()
+CONF = DATA_DIR / "recherches.json"
+LOG = DATA_DIR / "collecte.log"
 
 SCRAPERS = {"indeed": IndeedScraper, "glassdoor": GlassdoorScraper}
 

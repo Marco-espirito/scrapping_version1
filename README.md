@@ -75,6 +75,24 @@ profil navigateur persistant, les fenêtres interactives et SQLite nécessitent
 une machine ou un conteneur persistant. Pour une mise en production complète,
 utilisez par exemple un VPS/conteneur pour l'API et PostgreSQL pour les données.
 
+### Backend avec Docker
+
+Le dépôt fournit une image Playwright/FastAPI et un volume persistant :
+
+```powershell
+docker compose up --build -d
+```
+
+L'API écoute alors sur `http://localhost:8000`. En production, déployez cette
+image sur un hôte acceptant les conteneurs et les volumes persistants, exposez
+le port 8000 derrière HTTPS, puis configurez :
+
+- `CORS_ORIGINS=https://scrapping-version1.vercel.app` côté backend ;
+- `VITE_API_URL=https://votre-api.example.com` dans Vercel.
+
+Le mode conteneur utilise Chromium headless. Les challenges nécessitant une
+intervention humaine ne peuvent pas être résolus sur un serveur sans interface.
+
 ## Données sensibles
 
 Ne versionnez jamais `data/candidat.json`, `data/profil.json`, `data/jobs.db`,

@@ -12,11 +12,16 @@ Une offre contenant un terme d'EXCLUSION est fortement pénalisée.
 from __future__ import annotations
 
 import json
+import os
 import re
 import unicodedata
 from pathlib import Path
 
-PROFIL_PATH = Path(__file__).resolve().parents[1] / "data" / "profil.json"
+DATA_DIR = Path(os.getenv(
+    "JOBAPPLY_DATA_DIR",
+    Path(__file__).resolve().parents[1] / "data",
+)).resolve()
+PROFIL_PATH = DATA_DIR / "profil.json"
 
 
 def _normalize(text: str) -> str:

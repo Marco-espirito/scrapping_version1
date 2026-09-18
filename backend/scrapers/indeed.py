@@ -13,6 +13,7 @@ personnel/éducatif et avec parcimonie (rythme lent, volumes faibles).
 from __future__ import annotations
 
 import asyncio
+import os
 import random
 import re
 from pathlib import Path
@@ -26,7 +27,11 @@ from .base import BaseScraper, JobOffer
 BASE_URL = "https://fr.indeed.com"
 
 # Le contexte persistant stocke les cookies -> moins de captchas au 2e run.
-USER_DATA_DIR = Path(__file__).resolve().parents[2] / "data" / "browser_indeed"
+DATA_DIR = Path(os.getenv(
+    "JOBAPPLY_DATA_DIR",
+    Path(__file__).resolve().parents[2] / "data",
+)).resolve()
+USER_DATA_DIR = DATA_DIR / "browser_indeed"
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "

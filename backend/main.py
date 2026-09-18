@@ -19,6 +19,9 @@ from scrapers import IndeedScraper, GlassdoorScraper
 
 SCRAPERS = {"indeed": IndeedScraper, "glassdoor": GlassdoorScraper}
 COLLECT_LOCK = asyncio.Lock()
+SCRAPER_HEADLESS = os.getenv("SCRAPER_HEADLESS", "false").lower() in {
+    "1", "true", "yes", "on",
+}
 
 app = FastAPI(title="JobApply API")
 CORS_ORIGINS = [
@@ -134,7 +137,7 @@ async def collect(payload: CollectIn):
         raise HTTPException(409, "Une collecte est déjà en cours")
     async with COLLECT_LOCK:
         cls = SCRAPERS[payload.source]
-        scraper = cls(headless=False)
+        scraper = cls(headless=SCRAPER_HEADLESS)
         offers = await scraper.search(
             payload.query.strip(), payload.location.strip(),
             max_results=payload.limit,
