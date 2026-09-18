@@ -23,6 +23,7 @@ export default function App() {
   const [sort, setSort] = useState("score");
   const [loading, setLoading] = useState(false);
   const [collecting, setCollecting] = useState(false);
+  const [collectionMessage, setCollectionMessage] = useState("");
   const [error, setError] = useState("");
   const [form, setForm] = useState({ query: "développeur full stack", location: "Lyon", limit: 12, source: "indeed" });
 
@@ -57,11 +58,30 @@ export default function App() {
   async function runCollect() {
     setCollecting(true);
     setError("");
+    setCollectionMessage("Envoi de la demande…");
     try {
-      const r = await api.collect(form);
-      alert(`Collecte terminée : ${r.scraped} offres (${r.inserted} nouvelles, ${r.updated} déjà connues)`);
+      let r = await api.collect(form);
+      if (r.task_id) {
+        setCollectionMessage("En attente de l’agent local sur ton PC…");
+        for (let attempt = 0; attempt < 300; attempt += 1) {
+          await new Promise((resolve) => setTimeout(resolve, 3000));
+          r = await api.collectStatus(r.task_id);
+          if (r.status === "running") {
+            setCollectionMessage(`Collecte ${r.source} en cours sur ton PC…`);
+          }
+          if (r.status === "completed") break;
+          if (r.status === "failed") throw new Error(r.error || "Échec de l’agent local");
+        }
+        if (r.status !== "completed") {
+          throw new Error("Délai dépassé : vérifie que l’agent local est lancé");
+        }
+      }
+      setCollectionMessage(
+        `Terminé : ${r.scraped} offres, ${r.inserted} nouvelles, ${r.updated} déjà connues.`
+      );
       refresh();
     } catch (e) {
+      setCollectionMessage("");
       setError("Erreur collecte : " + e.message);
     } finally {
       setCollecting(false);
@@ -76,9 +96,13 @@ export default function App() {
 
       {error && (
         <div className="error" role="alert">
-          <b>Connexion au backend impossible.</b> {error}
+          <b>Un problème est survenu.</b> {error}
           <button onClick={refresh}>Réessayer</button>
         </div>
+      )}
+
+      {collectionMessage && (
+        <div className="collection-status" role="status">{collectionMessage}</div>
       )}
 
       <section className="collect">

@@ -7,6 +7,8 @@ header h1 { font-size: 22px; margin: 0 0 16px; }
 .error { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 16px;
   padding: 10px 12px; color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; }
 .error button { margin-left: auto; }
+.collection-status { margin-bottom: 16px; padding: 10px 12px; color: #1e40af;
+  background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; }
 
 .collect { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
 .collect input, .collect select, select {

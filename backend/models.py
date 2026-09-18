@@ -64,3 +64,26 @@ class Job(Base):
 
     def __repr__(self) -> str:  # pragma: no cover
         return f"<Job {self.source}:{self.external_id} {self.title!r}>"
+
+
+class CollectionTask(Base):
+    """Demande de collecte exécutée par l'agent installé sur le PC."""
+
+    __tablename__ = "collection_tasks"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(
+        String(36), unique=True, index=True
+    )
+    query: Mapped[str] = mapped_column(String(200))
+    location: Mapped[str] = mapped_column(String(200), default="")
+    limit: Mapped[int] = mapped_column(Integer, default=15)
+    source: Mapped[str] = mapped_column(String(50))
+    status: Mapped[str] = mapped_column(String(30), default="pending", index=True)
+    scraped: Mapped[int] = mapped_column(Integer, default=0)
+    inserted: Mapped[int] = mapped_column(Integer, default=0)
+    updated: Mapped[int] = mapped_column(Integer, default=0)
+    error: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

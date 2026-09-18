@@ -99,6 +99,26 @@ les volumes persistants, exposez l'API derrière HTTPS, puis configurez :
 Le mode conteneur utilise Chromium headless. Les challenges nécessitant une
 intervention humaine ne peuvent pas être résolus sur un serveur sans interface.
 
+### Collecte cloud avec le navigateur du PC
+
+Indeed et Glassdoor peuvent bloquer les navigateurs headless et les adresses IP
+de datacenter. Le mode `agent` conserve l'interface et l'API dans le cloud, mais
+exécute Playwright sur votre PC avec son profil navigateur persistant.
+
+Sur le backend hébergé, configurez :
+
+```text
+COLLECTOR_MODE=agent
+JOBAPPLY_AGENT_TOKEN=<un jeton long et aléatoire>
+```
+
+Sur le PC, copiez `.env.agent.example` vers `.env.agent`, puis placez le même
+jeton dans `JOBAPPLY_AGENT_TOKEN`. Lancez ensuite `run_agent.bat` et laissez la
+fenêtre ouverte. Une demande créée depuis Vercel sera récupérée par l'agent,
+exécutée dans un Chromium visible, puis renvoyée à l'API.
+
+Le jeton ne doit jamais être ajouté à Git. Le fichier `.env.agent` est ignoré.
+
 ## Données sensibles
 
 Ne versionnez jamais `data/candidat.json`, `data/profil.json`, `data/jobs.db`,

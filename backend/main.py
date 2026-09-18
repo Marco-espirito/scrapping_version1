@@ -2,26 +2,32 @@
 from __future__ import annotations
 
 import asyncio
+import hmac
 import json
 import os
-from datetime import datetime, timezone
+import uuid
+from datetime import datetime, timedelta, timezone
 from typing import Literal
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-from sqlalchemy import select, func
+from sqlalchemy import select, func, or_
 
 from db import init_db, get_session, upsert_offers
-from models import Job, JobStatus
+from models import CollectionTask, Job, JobStatus
 from matching import load_profil, score_offer, PROFIL_PATH
 from scrapers import IndeedScraper, GlassdoorScraper
+from scrapers.base import JobOffer
 
 SCRAPERS = {"indeed": IndeedScraper, "glassdoor": GlassdoorScraper}
 COLLECT_LOCK = asyncio.Lock()
 SCRAPER_HEADLESS = os.getenv("SCRAPER_HEADLESS", "false").lower() in {
     "1", "true", "yes", "on",
 }
+COLLECTOR_MODE = os.getenv("COLLECTOR_MODE", "direct").strip().lower()
+AGENT_TOKEN = os.getenv("JOBAPPLY_AGENT_TOKEN", "")
 
 app = FastAPI(title="JobApply API")
 CORS_ORIGINS = [
@@ -81,6 +87,53 @@ class CollectIn(BaseModel):
     source: Literal["indeed", "glassdoor"] = "indeed"
 
 
+class OfferIn(BaseModel):
+    source: Literal["indeed", "glassdoor"]
+    external_id: str = Field(min_length=1, max_length=255)
+    title: str = Field(min_length=1, max_length=500)
+    company: str = Field(default="", max_length=300)
+    location: str = Field(default="", max_length=300)
+    url: str = Field(default="", max_length=4000)
+    description: str = Field(default="", max_length=100_000)
+    salary: str = Field(default="", max_length=200)
+    contract_type: str = Field(default="", max_length=100)
+    posted_at: str = Field(default="", max_length=100)
+
+
+class AgentResultIn(BaseModel):
+    offers: list[OfferIn] = Field(max_length=100)
+
+
+class AgentFailureIn(BaseModel):
+    error: str = Field(min_length=1, max_length=2000)
+
+
+def _task_payload(task: CollectionTask) -> dict:
+    return {
+        "task_id": task.public_id,
+        "status": task.status,
+        "query": task.query,
+        "location": task.location,
+        "limit": task.limit,
+        "source": task.source,
+        "scraped": task.scraped,
+        "inserted": task.inserted,
+        "updated": task.updated,
+        "error": task.error,
+    }
+
+
+def _require_agent(request: Request) -> None:
+    if not AGENT_TOKEN:
+        raise HTTPException(503, "Agent local non configuré")
+    authorization = request.headers.get("authorization", "")
+    scheme, _, supplied = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not hmac.compare_digest(
+        supplied, AGENT_TOKEN
+    ):
+        raise HTTPException(401, "Jeton agent invalide")
+
+
 # ---------- Endpoints ----------
 @app.get("/api/jobs", response_model=list[JobOut])
 def list_jobs(
@@ -132,7 +185,25 @@ def update_job(job_id: int, payload: JobUpdate):
 
 @app.post("/api/collect")
 async def collect(payload: CollectIn):
-    """Scrape la source choisie et stocke. (Ouvre une fenêtre Chromium.)"""
+    """Lance localement ou met la collecte en attente pour l'agent PC."""
+    if COLLECTOR_MODE == "agent":
+        if not AGENT_TOKEN:
+            raise HTTPException(503, "Agent local non configuré")
+        task = CollectionTask(
+            public_id=str(uuid.uuid4()),
+            query=payload.query.strip(),
+            location=payload.location.strip(),
+            limit=payload.limit,
+            source=payload.source,
+        )
+        with get_session() as s:
+            s.add(task)
+            s.commit()
+            s.refresh(task)
+            result = _task_payload(task)
+        result["mode"] = "agent"
+        return JSONResponse(result, status_code=202)
+
     if COLLECT_LOCK.locked():
         raise HTTPException(409, "Une collecte est déjà en cours")
     async with COLLECT_LOCK:
@@ -145,6 +216,91 @@ async def collect(payload: CollectIn):
         stats_ = upsert_offers(offers)
         _rescore()
         return {"scraped": len(offers), **stats_}
+
+
+@app.get("/api/collect/{task_id}")
+def collection_status(task_id: str):
+    with get_session() as s:
+        task = s.scalar(
+            select(CollectionTask).where(CollectionTask.public_id == task_id)
+        )
+        if not task:
+            raise HTTPException(404, "Collecte introuvable")
+        return _task_payload(task)
+
+
+@app.get("/api/agent/tasks/next")
+def agent_next_task(request: Request):
+    _require_agent(request)
+    now = datetime.now(timezone.utc)
+    stale_before = now - timedelta(minutes=30)
+    with get_session() as s:
+        task = s.scalar(
+            select(CollectionTask)
+            .where(or_(
+                CollectionTask.status == "pending",
+                (CollectionTask.status == "running")
+                & (CollectionTask.started_at < stale_before),
+            ))
+            .order_by(CollectionTask.created_at.asc())
+            .limit(1)
+        )
+        if not task:
+            return JSONResponse(status_code=204, content=None)
+        task.status = "running"
+        task.started_at = now
+        task.error = ""
+        s.commit()
+        s.refresh(task)
+        return _task_payload(task)
+
+
+@app.post("/api/agent/tasks/{task_id}/complete")
+def agent_complete_task(
+    task_id: str, payload: AgentResultIn, request: Request
+):
+    _require_agent(request)
+    with get_session() as s:
+        task = s.scalar(
+            select(CollectionTask).where(CollectionTask.public_id == task_id)
+        )
+        if not task:
+            raise HTTPException(404, "Collecte introuvable")
+        if task.status == "completed":
+            return _task_payload(task)
+        if any(offer.source != task.source for offer in payload.offers):
+            raise HTTPException(400, "La source d'une offre ne correspond pas")
+
+        offers = [JobOffer(**offer.model_dump()) for offer in payload.offers]
+        stats_ = upsert_offers(offers)
+        _rescore()
+        task.status = "completed"
+        task.scraped = len(offers)
+        task.inserted = stats_["inserted"]
+        task.updated = stats_["updated"]
+        task.finished_at = datetime.now(timezone.utc)
+        s.commit()
+        s.refresh(task)
+        return _task_payload(task)
+
+
+@app.post("/api/agent/tasks/{task_id}/fail")
+def agent_fail_task(
+    task_id: str, payload: AgentFailureIn, request: Request
+):
+    _require_agent(request)
+    with get_session() as s:
+        task = s.scalar(
+            select(CollectionTask).where(CollectionTask.public_id == task_id)
+        )
+        if not task:
+            raise HTTPException(404, "Collecte introuvable")
+        task.status = "failed"
+        task.error = payload.error
+        task.finished_at = datetime.now(timezone.utc)
+        s.commit()
+        s.refresh(task)
+        return _task_payload(task)
 
 
 @app.post("/api/rank")

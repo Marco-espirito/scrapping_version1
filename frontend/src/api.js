@@ -20,5 +20,6 @@ export const api = {
     http(`/api/jobs/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   collect: (payload) =>
     http("/api/collect", { method: "POST", body: JSON.stringify(payload) }),
+  collectStatus: (taskId) => http(`/api/collect/${encodeURIComponent(taskId)}`),
   rank: () => http("/api/rank", { method: "POST" }),
 };

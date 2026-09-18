@@ -10,6 +10,8 @@ services:
       CORS_ORIGINS: "${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173,https://scrapping-version1.vercel.app}"
       SCRAPER_HEADLESS: "true"
       CHROMIUM_NO_SANDBOX: "true"
+      COLLECTOR_MODE: "${COLLECTOR_MODE:-direct}"
+      JOBAPPLY_AGENT_TOKEN: "${JOBAPPLY_AGENT_TOKEN:-}"
       JOBAPPLY_DATA_DIR: /app/data
     volumes:
       - jobapply_data:/app/data

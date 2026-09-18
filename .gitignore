@@ -25,6 +25,7 @@ data/browser_*/
 .env
 .env.*
 !.env.example
+!.env.agent.example
 .vercel/
 
 # Editors / OS
