@@ -4,6 +4,17 @@ from __future__ import annotations
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
 from abc import ABC, abstractmethod
+import os
+
+
+def chromium_args() -> list[str]:
+    """Options Chromium communes, avec sandbox désactivable en conteneur."""
+    args = ["--disable-blink-features=AutomationControlled"]
+    if os.getenv("CHROMIUM_NO_SANDBOX", "false").lower() in {
+        "1", "true", "yes", "on",
+    }:
+        args.append("--no-sandbox")
+    return args
 
 
 @dataclass

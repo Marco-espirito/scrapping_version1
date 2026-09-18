@@ -30,6 +30,7 @@ from sqlalchemy import select
 
 from db import init_db, get_session
 from models import Job, JobStatus
+from scrapers.base import chromium_args
 from scrapers.indeed import USER_DATA_DIR, USER_AGENT, BASE_URL
 
 DATA_DIR = Path(os.getenv(
@@ -188,7 +189,7 @@ async def main() -> None:
                 user_data_dir=str(USER_DATA_DIR), headless=False,
                 user_agent=USER_AGENT, locale="fr-FR",
                 viewport={"width": 1366, "height": 900},
-                args=["--disable-blink-features=AutomationControlled"],
+                args=chromium_args(),
             )
             page = await ctx.new_page()
             try:

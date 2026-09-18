@@ -83,9 +83,15 @@ Le dépôt fournit une image Playwright/FastAPI et un volume persistant :
 docker compose up --build -d
 ```
 
-L'API écoute alors sur `http://localhost:8000`. En production, déployez cette
-image sur un hôte acceptant les conteneurs et les volumes persistants, exposez
-le port 8000 derrière HTTPS, puis configurez :
+Le dashboard écoute alors sur `http://localhost:5173` et l'API sur
+`http://localhost:8000`. Les fichiers de configuration d'exemple sont copiés
+automatiquement dans le volume `jobapply_data` lors du premier démarrage.
+
+Pour personnaliser les ports ou l'URL compilée dans le frontend, créez un
+fichier `.env` à partir de `.env.example` avant la construction des images.
+
+En production, déployez l'image racine sur un hôte acceptant les conteneurs et
+les volumes persistants, exposez l'API derrière HTTPS, puis configurez :
 
 - `CORS_ORIGINS=https://scrapping-version1.vercel.app` côté backend ;
 - `VITE_API_URL=https://votre-api.example.com` dans Vercel.

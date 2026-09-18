@@ -22,7 +22,7 @@ from urllib.parse import urlencode, urljoin
 
 from playwright.async_api import async_playwright, Page
 
-from .base import BaseScraper, JobOffer
+from .base import BaseScraper, JobOffer, chromium_args
 
 BASE_URL = "https://www.glassdoor.fr"
 DATA_DIR = Path(os.getenv(
@@ -70,7 +70,7 @@ class GlassdoorScraper(BaseScraper):
                 user_data_dir=str(USER_DATA_DIR), headless=self.headless,
                 user_agent=USER_AGENT, locale="fr-FR",
                 viewport={"width": 1366, "height": 768},
-                args=["--disable-blink-features=AutomationControlled"],
+                args=chromium_args(),
             )
             await ctx.add_init_script(
                 "Object.defineProperty(navigator,'webdriver',{get:()=>undefined})")

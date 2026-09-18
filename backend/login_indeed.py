@@ -12,6 +12,7 @@ import asyncio
 
 from playwright.async_api import async_playwright
 
+from scrapers.base import chromium_args
 from scrapers.indeed import USER_DATA_DIR, USER_AGENT, BASE_URL
 
 
@@ -25,7 +26,7 @@ async def main() -> None:
             user_data_dir=str(USER_DATA_DIR), headless=False,
             user_agent=USER_AGENT, locale="fr-FR",
             viewport={"width": 1366, "height": 900},
-            args=["--disable-blink-features=AutomationControlled"],
+            args=chromium_args(),
         )
         await ctx.add_init_script(
             "Object.defineProperty(navigator,'webdriver',{get:()=>undefined})")

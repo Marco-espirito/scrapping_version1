@@ -21,7 +21,7 @@ from urllib.parse import urlencode
 
 from playwright.async_api import async_playwright, Page
 
-from .base import BaseScraper, JobOffer
+from .base import BaseScraper, JobOffer, chromium_args
 
 # Domaine FR ; mets "www.indeed.com" pour les US, etc.
 BASE_URL = "https://fr.indeed.com"
@@ -77,7 +77,7 @@ class IndeedScraper(BaseScraper):
                 user_agent=USER_AGENT,
                 locale="fr-FR",
                 viewport={"width": 1366, "height": 768},
-                args=["--disable-blink-features=AutomationControlled"],
+                args=chromium_args(),
             )
             # Masque le flag navigator.webdriver
             await ctx.add_init_script(
