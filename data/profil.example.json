@@ -1,0 +1,16 @@
+{
+  "competences": ["Python", "JavaScript", "React", "SQL"],
+  "intitule_recherche": ["développeur", "data analyst"],
+  "mots_cles_bonus": ["CDI", "télétravail"],
+  "localisations_preferees": ["Paris", "Lyon", "remote"],
+  "exclusions": ["stage non rémunéré"],
+  "salaire_min_annuel": 35000,
+  "ponderation": {
+    "competences": 5,
+    "intitule": 4,
+    "mots_cles_bonus": 2,
+    "localisation": 3,
+    "salaire": 2
+  }
+}
+

@@ -1,0 +1,16 @@
+{
+  "prenom": "Prénom",
+  "nom": "Nom",
+  "nom_complet": "Prénom Nom",
+  "email": "prenom.nom@example.com",
+  "telephone": "+33 6 00 00 00 00",
+  "ville": "Paris",
+  "linkedin": "https://www.linkedin.com/in/votre-profil",
+  "dossier_cv": "C:/chemin/vers/vos/cv",
+  "cv_par_defaut": "cv.pdf",
+  "cv_disponibles": {
+    "cv.pdf": ["développeur", "python", "react"]
+  },
+  "lettre_motivation_modele": ""
+}
+

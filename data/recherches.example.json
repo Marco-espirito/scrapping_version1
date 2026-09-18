@@ -1,0 +1,17 @@
+{
+  "recherches": [
+    {
+      "source": "indeed",
+      "query": "développeur python",
+      "location": "Paris",
+      "limit": 15
+    },
+    {
+      "source": "glassdoor",
+      "query": "data analyst",
+      "location": "Lyon",
+      "limit": 15
+    }
+  ]
+}
+

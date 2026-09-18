@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+*.tsbuildinfo
+
+# Local configuration and personal data
+data/candidat.json
+data/profil.json
+data/recherches.json
+data/jobs.db
+data/*.log
+data/offres_*.json
+data/browser_*/
+
+# Environment and deployment metadata
+.env
+.env.*
+!.env.example
+.vercel/
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
