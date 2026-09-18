@@ -67,8 +67,8 @@ python -m unittest discover -s backend\tests
 
 ## Déploiement
 
-Le fichier `vercel.json` déploie le frontend. Configurez `VITE_API_URL` dans
-Vercel avec l'URL HTTPS d'un backend hébergé séparément.
+Le dossier `frontend` est un projet Vercel autonome. Configurez
+`VITE_API_URL` dans Vercel avec l'URL HTTPS d'un backend hébergé séparément.
 
 Le backend ne doit pas être hébergé tel quel sur Vercel : Playwright avec un
 profil navigateur persistant, les fenêtres interactives et SQLite nécessitent
